@@ -6,8 +6,9 @@ Second dataset: https://archive.ics.uci.edu/ml/datasets/Quality+Assessment+of+Di
 
 ### Pre-processing:
 
+- Normalização
+- Correlaçoes entre variaveis(Melhorar performance)
 - Media/moda/media/desvio/distribuiçoes
-- Correlaçoes entre variaveis
 - Outliers
 - Information Gain
 - Dataset 1 - missing values por atributo/coluna
