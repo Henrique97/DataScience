@@ -15,6 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import confusion_matrix
+
 #print(__doc__)
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -22,6 +23,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 LW = 2
 RANDOM_STATE = 42
 repeater = 100
+sens = []
+spec = []
+accu = []
 
 class DummySampler(object):
 
@@ -42,7 +46,7 @@ df = pd.concat([pd.read_csv("hinselmann.csv"),pd.read_csv("green.csv"),pd.read_c
 df = pd.get_dummies(df, columns=['consensus'])
 X = df.drop(['experts::0','experts::1','experts::2','experts::3','experts::4',\
                   'experts::5', 'consensus_0.0','consensus_1.0'], axis = 1)
-Y = df['consensus_0.0']
+Y = df['consensus_1.0']
 
 X,y = X.values, Y.values
 
@@ -83,8 +87,8 @@ for i in range(0,repeater):
             probas_ = classif.predict_proba(X[test])
             pred = classif.predict(X[test])
             cm1 = confusion_matrix(y[test],pred)
-            Allmean_spec[name] += cm1[0,0]/(cm1[0,0]+cm1[0,1])
-            Allmean_sens[name] += cm1[1,1]/(cm1[1,0]+cm1[1,1])
+            Allmean_spec[name] += cm1[1,1]/(cm1[1,0]+cm1[1,1])
+            Allmean_sens[name] += cm1[0,0]/(cm1[0,0]+cm1[0,1])
             total1=sum(sum(cm1))
             Allmean_accu[name]+=(cm1[0,0]+cm1[1,1])/total1
             fpr, tpr, thresholds = roc_curve(y[test], probas_[:, 1])
@@ -104,6 +108,10 @@ for name, pipeline in pipelines:
     print('Sensitivity : ', Allmean_sens[name]/(repeater*cv.get_n_splits(X,y)))
     print('Specificity : ', Allmean_spec[name]/(repeater*cv.get_n_splits(X,y)))
     print ('Accuracy : ', Allmean_accu[name]/(repeater*cv.get_n_splits(X,y)))
+
+    spec.append(Allmean_spec[name]/(repeater*cv.get_n_splits(X,y)))
+    sens.append(Allmean_sens[name]/(repeater*cv.get_n_splits(X,y)))
+    accu.append(Allmean_accu[name]/(repeater*cv.get_n_splits(X,y)))
 
     Allmean_auc = auc(Allmean_fpr, Allmean_tpr[name])
     plt.plot(Allmean_fpr, Allmean_tpr[name], linestyle='--',
@@ -168,8 +176,8 @@ for i in range(0,repeater):
             probas_ = classif.predict_proba(X[test])
             pred = classif.predict(X[test])
             cm1 = confusion_matrix(y[test],pred)
-            Allmean_spec[name] += cm1[0,0]/(cm1[0,0]+cm1[0,1])
-            Allmean_sens[name] += cm1[1,1]/(cm1[1,0]+cm1[1,1])
+            Allmean_spec[name] += cm1[1,1]/(cm1[1,0]+cm1[1,1])
+            Allmean_sens[name] += cm1[0,0]/(cm1[0,0]+cm1[0,1])
             total1=sum(sum(cm1))
             Allmean_accu[name]+=(cm1[0,0]+cm1[1,1])/total1
             fpr, tpr, thresholds = roc_curve(y[test], probas_[:, 1])
@@ -185,10 +193,15 @@ print("--------Com Smote--------")
 for name, pipeline in pipelines:   
     Allmean_tpr[name] /= repeater
     print("-----",name,"-----")
+    
     print('Sensitivity : ', Allmean_sens[name]/(repeater*cv.get_n_splits(X,y)))
     print('Specificity : ', Allmean_spec[name]/(repeater*cv.get_n_splits(X,y)))
     print ('Accuracy : ', Allmean_accu[name]/(repeater*cv.get_n_splits(X,y)))
 
+    spec.append(Allmean_spec[name]/(repeater*cv.get_n_splits(X,y)))
+    sens.append(Allmean_sens[name]/(repeater*cv.get_n_splits(X,y)))
+    accu.append(Allmean_accu[name]/(repeater*cv.get_n_splits(X,y)))
+    
     Allmean_auc = auc(Allmean_fpr, Allmean_tpr[name])
     plt.plot(Allmean_fpr, Allmean_tpr[name], linestyle='--',
              label='{} (area = %0.2f)'.format(name) % Allmean_auc, lw=LW)
