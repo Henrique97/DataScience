@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 LW = 2
 RANDOM_STATE = 42
-repeater = 100
+repeater = 400
 sens = []
 spec = []
 accu = []
@@ -39,7 +39,7 @@ class DummySampler(object):
         return self.sample(X, y)
 
 
-cv = StratifiedKFold(n_splits=3)
+cv = StratifiedKFold(n_splits=3, shuffle=True)
 
 # Load the dataset
 df = pd.read_csv("allcons1_5percent.csv", sep=';')

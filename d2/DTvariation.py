@@ -21,10 +21,11 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 LW = 2
 RANDOM_STATE = 42
-repeater = 200
+repeater = 300
 sens = []
 spec = []
 accu = []
+rangeToTest=42
 
 class DummySampler(object):
 
@@ -38,7 +39,7 @@ class DummySampler(object):
         return self.sample(X, y)
 
 
-cv = StratifiedKFold(n_splits=3)
+cv = StratifiedKFold(n_splits=3,shuffle=True)
 
 # Load the dataset
 df = pd.concat([pd.read_csv("hinselmann.csv"),pd.read_csv("green.csv"),pd.read_csv("schiller.csv")])
@@ -232,6 +233,15 @@ sens = []
 spec = []
 accu = []
 
+classifiers= [['DT-None', tree.DecisionTreeClassifier()]]
+
+for i in range(2,rangeToTest,3):
+    classifier =[]
+    string = 'DT{}'.format(i)
+    classifier.append(string)
+    classifier.append(tree.DecisionTreeClassifier(max_depth=i))
+    classifiers.append(classifier)
+'''
 classifiers = [['DT-1', tree.DecisionTreeClassifier(max_depth=1)],
                 ['DT-2', tree.DecisionTreeClassifier(max_depth=2)],
                 ['DT-3', tree.DecisionTreeClassifier(max_depth=3)],
@@ -239,7 +249,7 @@ classifiers = [['DT-1', tree.DecisionTreeClassifier(max_depth=1)],
                 ['DT-5', tree.DecisionTreeClassifier(max_depth=5)],
                 ['DT-7', tree.DecisionTreeClassifier(max_depth=7)],
                 ['DT-None', tree.DecisionTreeClassifier()]]
-
+'''
 samplers = [
     ['', DummySampler()]
 ]
@@ -323,8 +333,13 @@ plt.legend(loc="lower right")
 
 plt.show()
 
+xvals=np.arange(2, rangeToTest, 3)
+
+rangeToTest//=3
+rangeToTest+=1
+
 fig, ax = plt.subplots()
-ax.plot([1,2,3,4,5,6,7], accu[0:7])
+ax.plot(xvals, accu[1:rangeToTest])
 
 ax.set(xlabel='max_depth', ylabel='accuracy',
        title='Accuracy')
@@ -333,7 +348,7 @@ ax.grid()
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot([1,2,3,4,5,6,7], spec[0:7])
+ax.plot(xvals, spec[1:rangeToTest])
 
 ax.set(xlabel='max_depth', ylabel='specificity',
        title='Specificity')
@@ -342,7 +357,7 @@ ax.grid()
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot([1,2,3,4,5,6,7], sens[0:7])
+ax.plot(xvals, sens[1:rangeToTest])
 
 ax.set(xlabel='max_depth', ylabel='sensitivity',
        title='Sensitivity')
