@@ -1,20 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interp
-from sklearn import datasets, neighbors
 from sklearn.metrics import auc, roc_curve
-from sklearn.model_selection import StratifiedKFold
 import pandas as pd
-from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
-from imblearn.pipeline import make_pipeline
-from sklearn.ensemble import RandomForestClassifier                          
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.neural_network import MLPClassifier
-from sklearn import tree
-from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.preprocessing import MinMaxScaler
-#print(__doc__)
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 
 LW = 2
 RANDOM_STATE = 42
@@ -32,11 +25,11 @@ class DummySampler(object):
         return self.sample(X, y)
 
 # Load the dataset
-dftraining = pd.read_csv("all_mean_in_class.csv")
+dftraining = pd.read_csv("all_mean_in_class_training.csv")
 dftraining  = pd.get_dummies(dftraining, columns=['class'])
 dftraining = dftraining.drop(['Unnamed: 0','class_neg'], axis=1)
 
-dftest = pd.read_csv("training_set_media_geral.csv")
+dftest = pd.read_csv("all_mean_in_class_test.csv")
 dftest  = pd.get_dummies(dftest, columns=['class'])
 dftest = dftest.drop(['Unnamed: 0','class_neg'], axis=1)
 
@@ -52,41 +45,35 @@ Xtraining,ytraining = Xtraining.values, Ytraining.values
 Xtesting, ytesting = Xtesting.values,Ytesting.values
 
 
-classifiers = [['3nn',neighbors.KNeighborsClassifier(3)],['Rf',RandomForestClassifier()], ['DT', tree.DecisionTreeClassifier()], ['NBG', GaussianNB()]]
-samplers = [
-    ['Standard', DummySampler()]
-]
-
-pipelines = [
-    ['{}-{}'.format(samplers[0][0], classifier[0]),
-     make_pipeline(samplers[0][1], classifier[1])]
-    for classifier in classifiers
-]
+classifiers = [['3nn',KNeighborsClassifier(3)], \
+               ['Rf',RandomForestClassifier()], \
+               ['DT', DecisionTreeClassifier()], \
+               ['NBG', GaussianNB()]]
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
 Allmean_tpr = dict()
-for name, pipeline in pipelines:
-    Allmean_tpr[name]=0.0
+for classifier in classifiers:
+    Allmean_tpr[classifier[0]]=0.0
 Allmean_fpr = np.linspace(0, 1, 100)
 for i in range(0,repeater):
-    for name, pipeline in pipelines:
+    for classifier in classifiers:
         mean_tpr = 0.0
         mean_fpr = np.linspace(0, 1, 100)
-        probas_ = pipeline.fit(Xtraining, ytraining).predict_proba(Xtesting)
+        probas_ = classifier[1].fit(Xtraining, ytraining).predict_proba(Xtesting)
         fpr, tpr, thresholds = roc_curve(ytesting, probas_[:, 1])
         mean_tpr = interp(mean_fpr, fpr, tpr)
         mean_tpr[0] = 0.0
         roc_auc = auc(fpr, tpr) 
         mean_tpr[-1] = 1.0
-        Allmean_tpr[name]+=mean_tpr
+        Allmean_tpr[classifier[0]]+=mean_tpr
         
-for name, pipeline in pipelines:   
-    Allmean_tpr[name] /= repeater
-    Allmean_auc = auc(Allmean_fpr, Allmean_tpr[name])
-    plt.plot(Allmean_fpr, Allmean_tpr[name], linestyle='--',
-             label='{} (area = %0.2f)'.format(name) % Allmean_auc, lw=LW)
+for classifier in classifiers:   
+    Allmean_tpr[classifier[0]] /= repeater
+    Allmean_auc = auc(Allmean_fpr, Allmean_tpr[classifier[0]])
+    plt.plot(Allmean_fpr, Allmean_tpr[classifier[0]], linestyle='--',
+             label=f'{classifier[0]} (area = %0.2f)'.format(classifier[0]) % Allmean_auc, lw=LW)
     
 plt.plot([0, 1], [0, 1], linestyle='--', lw=LW, color='k',
          label='Luck')
@@ -114,41 +101,35 @@ plt.show()
 Xtraining=StandardScaler().fit_transform(Xtraining)
 Xtesting=StandardScaler().fit_transform(Xtesting)
 
-classifiers = [['3nn',neighbors.KNeighborsClassifier(3)],['Rf',RandomForestClassifier()], ['DT', tree.DecisionTreeClassifier()], ['NBG', GaussianNB()]]
-samplers = [
-    ['Standard', DummySampler()]
-]
-
-pipelines = [
-    ['{}-{}'.format(samplers[0][0], classifier[0]),
-     make_pipeline(samplers[0][1], classifier[1])]
-    for classifier in classifiers
-]
+classifiers = [['3nn',KNeighborsClassifier(3)], \
+               ['Rf',RandomForestClassifier()], \
+               ['DT', DecisionTreeClassifier()], \
+               ['NBG', GaussianNB()]]
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
 Allmean_tpr = dict()
-for name, pipeline in pipelines:
-    Allmean_tpr[name]=0.0
+for classifier in classifiers:
+    Allmean_tpr[classifier[0]]=0.0
 Allmean_fpr = np.linspace(0, 1, 100)
 for i in range(0,repeater):
-    for name, pipeline in pipelines:
+    for classifier in classifiers:
         mean_tpr = 0.0
         mean_fpr = np.linspace(0, 1, 100)
-        probas_ = pipeline.fit(Xtraining, ytraining).predict_proba(Xtesting)
+        probas_ = classifier[1].fit(Xtraining, ytraining).predict_proba(Xtesting)
         fpr, tpr, thresholds = roc_curve(ytesting, probas_[:, 1])
         mean_tpr = interp(mean_fpr, fpr, tpr)
         mean_tpr[0] = 0.0
         roc_auc = auc(fpr, tpr) 
         mean_tpr[-1] = 1.0
-        Allmean_tpr[name]+=mean_tpr
+        Allmean_tpr[classifier[0]]+=mean_tpr
         
-for name, pipeline in pipelines:   
-    Allmean_tpr[name] /= repeater
-    Allmean_auc = auc(Allmean_fpr, Allmean_tpr[name])
-    plt.plot(Allmean_fpr, Allmean_tpr[name], linestyle='--',
-             label='{} (area = %0.2f)'.format(name) % Allmean_auc, lw=LW)
+for classifier in classifiers:   
+    Allmean_tpr[classifier[0]] /= repeater
+    Allmean_auc = auc(Allmean_fpr, Allmean_tpr[classifier[0]])
+    plt.plot(Allmean_fpr, Allmean_tpr[classifier[0]], linestyle='--',
+             label=f'{classifier[0]} (area = %0.2f)'.format(classifier[0]) % Allmean_auc, lw=LW)
     
 plt.plot([0, 1], [0, 1], linestyle='--', lw=LW, color='k',
          label='Luck')
