@@ -16,8 +16,9 @@ x = df.columns.tolist()
 mean = df.mean(axis=0)
 std = df.std(axis=0)
 
-plt.plot(x, mean, 'o', color='red')
-plt.plot(x, std, 'o', color='blue')
+plt.plot(x, mean, 'o', label = 'Mean', color='red')
+plt.plot(x, std, 'o', label = 'Standard Deviation', color='blue')
+plt.legend()
 
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
